@@ -3,7 +3,7 @@
 import { useCallback, useMemo } from "react";
 import {
   addDays, diffDays, formatDateLong, getEaster, MONTH_NAMES, nthSundayOfMonth,
-  sameDay, toUTC, type MeditationMeta,
+  sameDay, todayUTC, type MeditationMeta,
 } from "@/lib/liturgical";
 
 const WEEKDAY_HEADS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
@@ -19,7 +19,7 @@ interface Props {
 
 /** Compact month grid; days carrying their own assignment are dotted. */
 export function MonthCalendar({ month, year, selected, index, onSelect, onMonthChange }: Props) {
-  const today = useMemo(() => toUTC(new Date()), []);
+  const today = useMemo(() => todayUTC(), []);
 
   const cells = useMemo(() => {
     const first = new Date(Date.UTC(year, month - 1, 1));

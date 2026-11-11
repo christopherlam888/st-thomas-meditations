@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { CalendarCheck, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  addDays, formatDateLong, resolveDate, stepDay, dateKey, type MeditationMeta,
+  addDays, formatDateLong, resolveDate, stepDay, dateKey, todayUTC, type MeditationMeta,
 } from "@/lib/liturgical";
 import type { Meditation } from "@/lib/book";
 import { MeditationText } from "./meditation-text";
@@ -21,15 +21,29 @@ function toDateInput(d: Date): string {
 }
 
 function fromTodayOffset(days: number): Date {
-  const now = new Date();
-  const base = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
-  return addDays(base, days);
+  return addDays(todayUTC(), days);
 }
 
 export function DayView({ date, index, meditations, onChangeDate }: Props) {
   const resolution = useMemo(() => resolveDate(date, index), [date, index]);
   const prev = useMemo(() => stepDay(date, index, -1), [date, index]);
   const next = useMemo(() => stepDay(date, index, 1), [date, index]);
+
+  // The native <input type="date"> is deliberately left uncontrolled:
+  // Chromium/WebKit fire intermediate "input" events while their segmented
+  // editor is in use (e.g. "0002-12-25" after the first year digit), and a
+  // controlled value would fight — and reset — the editor mid-keystroke.
+  // When the date is changed from OUTSIDE the field (buttons, sidebar
+  // calendar, feast list), the display is synced imperatively below.
+  const inputRef = useRef<HTMLInputElement>(null);
+  const syncedValue = useRef<string>(dateKey(date));
+  useEffect(() => {
+    const v = dateKey(date);
+    if (v !== syncedValue.current) {
+      syncedValue.current = v;
+      if (inputRef.current && inputRef.current.value !== v) inputRef.current.value = v;
+    }
+  }, [date]);
 
   const byId = useMemo(() => {
     const map = new Map<number, Meditation>();
@@ -63,12 +77,16 @@ export function DayView({ date, index, meditations, onChangeDate }: Props) {
             <ChevronLeft className="h-4 w-4" />
           </button>
           <input
+            ref={inputRef}
             type="date"
             aria-label="Choose a date"
-            value={toDateInput(date)}
+            defaultValue={toDateInput(date)}
             onChange={(e) => {
               const [y, m, d] = e.target.value.split("-").map(Number);
-              if (y && m && d) onChangeDate(new Date(Date.UTC(y, m - 1, d)));
+              // Ignore empty values and, crucially, the zero-padded years
+              // ("0002", "0020", …) Chromium reports while a year is only
+              // partially typed — they are complete-looking but wrong dates.
+              if (y >= 1000 && m && d) onChangeDate(new Date(Date.UTC(y, m - 1, d)));
             }}
             className="h-9 bg-transparent px-2 text-sm text-foreground outline-none [color-scheme:light] dark:[color-scheme:dark]"
           />

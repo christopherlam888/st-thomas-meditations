@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { BookOpen, CalendarDays, Heart, Info, ScrollText } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { MEDITATION_INDEX } from "@/data/index";
-import { sameDay as isSameDay, toUTC, type MeditationMeta } from "@/lib/liturgical";
+import { sameDay as isSameDay, todayUTC, type MeditationMeta } from "@/lib/liturgical";
 import { useBook } from "@/lib/book";
 import { MonthCalendar, feastDates } from "./month-calendar";
 import { DayView } from "./day-view";
@@ -37,7 +37,7 @@ export function AppShell() {
   // pre-rendered at build time, so a build-time date would mismatch.
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect */
-    const t = toUTC(new Date());
+    const t = todayUTC();
     setToday(t);
     setDate((d) => d ?? t);
     setCal((c) => c ?? { y: t.getUTCFullYear(), m: t.getUTCMonth() + 1 });

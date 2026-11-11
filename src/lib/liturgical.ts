@@ -33,8 +33,32 @@ export function getEaster(year: number): Date {
   return new Date(Date.UTC(year, month - 1, day));
 }
 
+/**
+ * Normalize a date to UTC midnight.
+ *
+ * Dates that already sit at UTC midnight — which is how every internal book
+ * date is constructed (Date.UTC) — are passed through untouched: reading
+ * their LOCAL calendar parts would shift them one day back in any timezone
+ * west of UTC (e.g. the Americas), producing an off-by-one in the shown
+ * meditation and freezing the prev/next day arrows.
+ */
 export function toUTC(d: Date): Date {
+  if (
+    d.getUTCHours() === 0 &&
+    d.getUTCMinutes() === 0 &&
+    d.getUTCSeconds() === 0 &&
+    d.getUTCMilliseconds() === 0
+  ) {
+    return d;
+  }
+  // "Wall clock" dates (e.g. new Date()): keep the local calendar date.
   return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+}
+
+/** Today's LOCAL calendar date, normalized to UTC midnight. */
+export function todayUTC(): Date {
+  const n = new Date();
+  return new Date(Date.UTC(n.getFullYear(), n.getMonth(), n.getDate()));
 }
 
 export function addDays(d: Date, n: number): Date {
