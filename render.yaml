@@ -1,0 +1,18 @@
+# Render.com blueprint — deploys this site as a static site.
+# Docs: https://render.com/docs/blueprint-spec
+#
+# After the first deploy, every push to the connected branch rebuilds the site.
+services:
+  - type: web
+    name: aquinas-meditations
+    runtime: static
+    buildCommand: npm install --no-package-lock && npm run build
+    outputDir: out
+    headers: # long-cache immutable assets
+      - path: /images/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /book.json
+        name: Cache-Control
+        value: public, max-age=86400
+    pullRequestPreviewsEnabled: true
